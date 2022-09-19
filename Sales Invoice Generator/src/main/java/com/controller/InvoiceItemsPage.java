@@ -1,4 +1,4 @@
-package Pages;
+package com.controller;
 
 public class InvoiceItemsPage {
 }
