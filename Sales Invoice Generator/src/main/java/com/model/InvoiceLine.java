@@ -4,6 +4,16 @@ public class InvoiceLine {
 
     private String itemName;
 
+    public int getInvNum() {
+        return invNum;
+    }
+
+    public void setInvNum(int invNum) {
+        this.invNum = invNum;
+    }
+        private int invNum;
+
+
 
     public InvoiceLine(String itemName, Double itemPrice, int count, InvoiceHeader inv) {
         this.itemName = itemName;
@@ -18,6 +28,14 @@ public class InvoiceLine {
     private  Double itemPrice;
     private  int count;
     private InvoiceHeader inv;
+
+    public InvoiceHeader getInv() {
+        return inv;
+    }
+
+    public void setInv(InvoiceHeader inv) {
+        this.inv = inv;
+    }
 
     
     public Double getItemTotal()

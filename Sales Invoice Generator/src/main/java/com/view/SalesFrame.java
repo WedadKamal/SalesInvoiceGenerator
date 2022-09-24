@@ -5,11 +5,15 @@
 package com.view;
 
 import com.controller.MyListner;
+import com.model.FileOperations;
+import com.model.InvoiceHeader;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JTable;
+import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -23,26 +27,48 @@ public class SalesFrame extends javax.swing.JFrame {
      */
     public SalesFrame() throws IOException, ParseException, Exception {
         myListner = new MyListner();
+        file = new FileOperations();
         initComponents();
-        displayData();
+        setVisible(true);
+
     }
 
     
-    private String [] invoicesTableHeader = {"No.","Date","Customer","Total"};
-    private String [] invoiceItemsHeader = {"No.","Item Name","Item Price","Item Total"};
+   static private String [] invoicesTableHeader = {"No.","Date","Customer","Total"};
+   static private String [] invoiceItemsHeader = {"No.","Item Name","Item Price","Item Total"};
     
-    public void displayData() throws IOException, ParseException, Exception{
+    public void displayDataforHeaderTable() throws IOException, ParseException, Exception{
     
         DefaultTableModel model = (DefaultTableModel) invoicesTable.getModel();
-        DefaultTableModel model2 = (DefaultTableModel) invoiceItems.getModel();
+     //   DefaultTableModel model2 = (DefaultTableModel) invoiceItems.getModel();
 
-        
-        model.setDataVector(myListner.readToTable(), invoicesTableHeader);
-        model2.setDataVector(myListner.readToScondTable(), invoiceItemsHeader);
+ArrayList<InvoiceHeader> invoiceItemsData = file.readFile();
+        model.setDataVector(myListner.readToTable(invoiceItemsData), invoicesTableHeader);
+     //   model2.setDataVector(myListner.readToScondTable(0,invoiceItemsData), invoiceItemsHeader);
 
        
     
     }
+
+    static public void displayHeaderLineDataFromChooser(Object[][] headerTableData, Object[][] lineTableData) throws IOException, ParseException, Exception{
+      DefaultTableModel model = (DefaultTableModel) invoicesTable.getModel();
+       model.setDataVector(headerTableData, invoicesTableHeader);
+          DefaultTableModel model2 = (DefaultTableModel) invoiceItems.getModel();
+          model2.setDataVector(lineTableData, invoiceItemsHeader);
+         /* this.invoiceItems.setModel(model);
+          this.invoiceItems.getModel();*/
+       //   this.setVisible(true);
+    }
+      
+         public void displayItemDataFromChooser(Object[][] lineTableData) throws IOException, ParseException, Exception{
+        DefaultTableModel model2 = (DefaultTableModel) invoiceItems.getModel();
+        model2.setDataVector(lineTableData, invoiceItemsHeader);
+       // model2.fireTableDataChanged();
+       /* this.invoiceItems.setModel(model2);
+        this.invoiceItems.getModel();*/
+             this.setVisible(true);
+         }
+   
     
     
     /**
@@ -71,10 +97,10 @@ public class SalesFrame extends javax.swing.JFrame {
         invoiceTotal = new javax.swing.JLabel();
         jScrollPane2 = new javax.swing.JScrollPane();
         invoiceItems = new javax.swing.JTable();
-        saveBtn = new javax.swing.JButton();
-        saveBtn.addActionListener(myListner);
-        cancelBtn = new javax.swing.JButton();
-        cancelBtn.addActionListener(myListner);
+        newItemBtn = new javax.swing.JButton();
+        newItemBtn.addActionListener(myListner);
+        deleteItemBtn = new javax.swing.JButton();
+        deleteItemBtn.addActionListener(myListner);
         invoicesTableLbl = new javax.swing.JLabel();
         invoiceItemsLbl = new javax.swing.JLabel();
         menuBar = new javax.swing.JMenuBar();
@@ -99,6 +125,15 @@ public class SalesFrame extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
+        invoicesTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                try {
+                    invoicesTableMouseClicked(evt);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
         jScrollPane1.setViewportView(invoicesTable);
 
         createNewInvoiceBtn.setText("Create New Invoice");
@@ -144,14 +179,19 @@ public class SalesFrame extends javax.swing.JFrame {
         ));
         jScrollPane2.setViewportView(invoiceItems);
 
-        saveBtn.setText("Save");
-        saveBtn.addActionListener(new java.awt.event.ActionListener() {
+        newItemBtn.setText("New Item");
+        newItemBtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                saveBtnActionPerformed(evt);
+                newItemBtnActionPerformed(evt);
             }
         });
 
-        cancelBtn.setText("Cancel");
+        deleteItemBtn.setText("Delete Item");
+        deleteItemBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteItemBtnActionPerformed(evt);
+            }
+        });
 
         invoicesTableLbl.setText("Invoices Table");
 
@@ -195,9 +235,9 @@ public class SalesFrame extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addGap(57, 57, 57)
-                        .addComponent(saveBtn)
+                        .addComponent(newItemBtn)
                         .addGap(45, 45, 45)
-                        .addComponent(cancelBtn)
+                        .addComponent(deleteItemBtn)
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -248,13 +288,13 @@ public class SalesFrame extends javax.swing.JFrame {
                         .addGap(18, 18, 18)
                         .addComponent(invoiceItemsLbl)
                         .addGap(5, 5, 5)
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 192, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 216, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 316, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(17, 17, 17)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(deleteInvoiceBtn)
-                    .addComponent(saveBtn)
-                    .addComponent(cancelBtn)
+                    .addComponent(newItemBtn)
+                    .addComponent(deleteItemBtn)
                     .addComponent(createNewInvoiceBtn))
                 .addContainerGap(48, Short.MAX_VALUE))
         );
@@ -263,20 +303,94 @@ public class SalesFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void loadFileBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadFileBtnActionPerformed
-        // TODO add your handling code here:
+
+
     }//GEN-LAST:event_loadFileBtnActionPerformed
 
     private void createNewInvoiceBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createNewInvoiceBtnActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_createNewInvoiceBtnActionPerformed
 
-    private void saveBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveBtnActionPerformed
+    private void newItemBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_newItemBtnActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_saveBtnActionPerformed
+    }//GEN-LAST:event_newItemBtnActionPerformed
 
     private void deleteInvoiceBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteInvoiceBtnActionPerformed
         // TODO add your handling code here:
+
+           DefaultTableModel model2 = (DefaultTableModel) invoicesTable.getModel();
+                  if(invoicesTable.getSelectedRowCount()==1){
+                  model2.removeRow(invoicesTable.getSelectedRow());
+                  }else{
+                  if(invoicesTable.getSelectedRowCount()==0){
+                  JOptionPane.showMessageDialog(this, "you should select a single row or the Table is Empty");
+                  }else{
+                                        JOptionPane.showMessageDialog(this, "Please Select Single Row for Delete ");
+
+                  }
+                  }
+
     }//GEN-LAST:event_deleteInvoiceBtnActionPerformed
+
+    private void invoicesTableMouseClicked(java.awt.event.MouseEvent evt) throws Exception {//GEN-FIRST:event_invoicesTableMouseClicked
+        // TODO add your handling code here:
+              DefaultTableModel model = (DefaultTableModel) invoicesTable.getModel();
+              int selectedRowIndex = invoicesTable.getSelectedRow();
+              invoiceNumber.setText(model.getValueAt(selectedRowIndex, 0).toString());
+              invoiceDate.setText(model.getValueAt(selectedRowIndex, 1).toString());
+              customerName.setText(model.getValueAt(selectedRowIndex, 2).toString());
+              invoiceTotal.setText(model.getValueAt(selectedRowIndex, 3).toString());
+
+       // Vector<Vector> dataVector = model.getDataVector();
+        ArrayList<InvoiceHeader> invoiceHeaders=file.readFile();
+                          int column = 4;
+
+        String[][] invoicesItemsData = new String[0][];
+                          String tableValueInvNum = model.getValueAt(selectedRowIndex, 0).toString();
+                                // String[] arr= new String[0];
+        String test = "";
+                          for(int j = 0 ; j<invoiceHeaders.size(); j++){
+
+                              test= String.valueOf(invoiceHeaders.get(j).getInvoiceNum());
+                              if( tableValueInvNum.equalsIgnoreCase(String.valueOf(invoiceHeaders.get(j).getInvoiceNum()))){
+
+                                   invoicesItemsData = new String[invoiceHeaders.get(j).getInvoiceLines().size()][column];
+                                  for (int row = 0; row < invoicesItemsData. length; row++) {
+                                  
+                              invoicesItemsData[row][0] = String.valueOf(invoiceHeaders.get(j).getInvoiceLines().get(row).getItemName());
+                              invoicesItemsData[row][1] = String.valueOf(invoiceHeaders.get(j).getInvoiceLines().get(row).getItemPrice());
+                              invoicesItemsData[row][2] = String.valueOf(invoiceHeaders.get(j).getInvoiceLines().get(row).getCount());
+                              invoicesItemsData[row][3] = String.valueOf(invoiceHeaders.get(j).getInvoiceLines().get(row).getItemTotal());
+                          }}
+
+                          }
+        DefaultTableModel model2 = (DefaultTableModel) invoiceItems.getModel();
+        model2.setDataVector(invoicesItemsData, invoiceItemsHeader);
+     //   setVisible(true);
+    
+              System.out.println(model.getValueAt(selectedRowIndex, 0).toString());
+              System.out.println(model.getValueAt(selectedRowIndex, 1).toString());
+              System.out.println(model.getValueAt(selectedRowIndex, 2).toString());
+              System.out.println(model.getValueAt(selectedRowIndex, 3).toString());
+
+    }//GEN-LAST:event_invoicesTableMouseClicked
+
+    private void deleteItemBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteItemBtnActionPerformed
+        // TODO add your handling code here:
+        
+                  DefaultTableModel model2 = (DefaultTableModel) invoiceItems.getModel();
+                  if(invoiceItems.getSelectedRowCount()==1){
+                  model2.removeRow(invoiceItems.getSelectedRow());
+                  }else{
+                  if(invoiceItems.getSelectedRowCount()==0){
+                  JOptionPane.showMessageDialog(this, "you should select a single row or the Table is Empty");
+                  }else{
+                                        JOptionPane.showMessageDialog(this, "Please Select Single Row for Delete ");
+
+                  }
+                  }
+
+    }//GEN-LAST:event_deleteItemBtnActionPerformed
 
     
  //     invoicesTable = new JTable(readToTable(),invoicesTableHeader);
@@ -310,6 +424,7 @@ public class SalesFrame extends javax.swing.JFrame {
 //        }
         //</editor-fold>
 
+
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -328,29 +443,32 @@ public class SalesFrame extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenu FileMenu;
-    private javax.swing.JButton cancelBtn;
     private javax.swing.JButton createNewInvoiceBtn;
     private javax.swing.JLabel customerName;
     private javax.swing.JLabel customerNameLabel;
     private javax.swing.JButton deleteInvoiceBtn;
+    private javax.swing.JButton deleteItemBtn;
     private javax.swing.JLabel invoiceDate;
     private javax.swing.JLabel invoiceDateLabel;
-    private javax.swing.JTable invoiceItems;
+    private static javax.swing.JTable invoiceItems;
     private javax.swing.JLabel invoiceItemsLbl;
     private javax.swing.JLabel invoiceNumber;
     private javax.swing.JLabel invoiceNumberLabel;
     private javax.swing.JLabel invoiceTotal;
     private javax.swing.JLabel invoiceTotalLabel;
-    private javax.swing.JTable invoicesTable;
+    private static javax.swing.JTable invoicesTable;
     private javax.swing.JLabel invoicesTableLbl;
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JMenuItem loadFileBtn;
     private javax.swing.JMenuBar menuBar;
-    private javax.swing.JButton saveBtn;
+    private javax.swing.JButton newItemBtn;
     private javax.swing.JMenuItem saveFileBtn;
     // End of variables declaration//GEN-END:variables
 
-    private MyListner myListner;}
+    private MyListner myListner;
+    private FileOperations file;
+
+}
 /*}*/

@@ -7,11 +7,11 @@ public class InvoiceHeader {
 
 
     private  int invoiceNum;
-    private  Date invoiceDate;
+    private  String invoiceDate;
     private  String customerName;
     private ArrayList <InvoiceLine> InvoiceLines; // min 1:05
 
-    public InvoiceHeader(int invoiceNum, Date invoiceDate, String customerName) {
+    public InvoiceHeader(int invoiceNum, String invoiceDate, String customerName) {
         this.invoiceNum = invoiceNum;
         this.invoiceDate = invoiceDate;
         this.customerName = customerName;
@@ -26,6 +26,9 @@ public class InvoiceHeader {
     {
 
         Double total= 0.0;
+           if(InvoiceLines== null){
+        InvoiceLines=new ArrayList();
+        }
         
         for(InvoiceLine item: InvoiceLines)
         {
@@ -52,11 +55,11 @@ public class InvoiceHeader {
 
 
 
-    public Date getInvoiceDate() {
+    public String getInvoiceDate() {
         return invoiceDate;
     }
 
-    public void setInvoiceDate(Date invoiceDate) {
+    public void setInvoiceDate(String invoiceDate) {
         this.invoiceDate = invoiceDate;
     }
 
